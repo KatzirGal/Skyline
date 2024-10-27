@@ -102,7 +102,7 @@
 			var latitude = Cesium.Math.toDegrees(cartographic.latitude);
 			var height = cartographic.height;
 			
-			setArrowPos( (( 180 + longitude) / 360) * globeRect.width, ((latitude) / 360) * globeRect.height);
+			setArrowPos( (( 180 + longitude) / 360) * globeRect.width, ((90 - latitude) / 180) * globeRect.height);
 
 			console.log("Intersection at: ", longitude, latitude, height);
 		}
