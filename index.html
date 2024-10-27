@@ -81,6 +81,11 @@
 		var cartographic = from2DtoCartographicPosition(event.position);
 		setArrowPosFromCartographicPosition(cartographic);		
 	}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+	screenSpaceEventHandler.setInputAction(function(event){
+		var cartographic = from2DtoCartographicPosition(event.position);
+		setArrowPosFromCartographicPosition(cartographic);		
+	}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
 	
 	globe.addEventListener('click', function(event){		  
 		var globePosX = event.clientX - globeRect.left;
