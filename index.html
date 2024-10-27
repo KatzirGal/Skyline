@@ -89,7 +89,23 @@
 
 	var screenSpaceEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 	screenSpaceEventHandler.setInputAction(function(event){
-		setArrowPos((event.position.x - cesiumContainerRect.left) * xRatio, (event.position.y - cesiumContainerRect.top) * yRatio);
+		// Get the ray from the screen position
+		var ray = viewer.camera.getPickRay(event.position);
+    
+		// Find the intersection of the ray with the globe
+		var intersection = viewer.scene.globe.pick(ray, viewer.scene);
+		if (intersection) {
+			var cartographic = Cesium.Ellipsoid.WGS84.cartesianToCartographic(intersection);
+			
+			// Get the latitude, longitude, and height
+			var longitude = Cesium.Math.toDegrees(cartographic.longitude);
+			var latitude = Cesium.Math.toDegrees(cartographic.latitude);
+			var height = cartographic.height;
+			
+			setArrowPos( (( 180 + longitude) / 360) * globeRect.width, ((latitude) / 360) * globeRect.height);
+
+			console.log("Intersection at: ", longitude, latitude, height);
+		}
 		
 	}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 	
