@@ -92,22 +92,17 @@
 	}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 	
 	globe.addEventListener('click', function(event){		  
-		var globePosX = event.clientX;
-		var globePosY = event.clientY;
+		var globePosX = event.clientX - globeRect.left;
+		var globePosY = event.clientY - globeRect.top;
 		
-		setArrowPos(globePosX - globeRect.left, globePosY - globeRect.top);
+		setArrowPos(globePosX, globePosY);
 
 		var position = {};
 		position.x = ((360 * globePosX) / globeRect.width) - 180;
 		position.y = 90 - ((180 * globePosY) / globeRect.height);
-		
-		var cartographic = from2DtoCartographicPosition(position);
-		var latitude = Cesium.Math.toDegrees(cartographic.latitude);
-		var longitude = Cesium.Math.toDegrees(cartographic.longitude);
-		var height = cartographic.height;
 
 		camera.flyTo({
-			destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
+			destination: Cesium.Cartesian3.fromDegrees(position.x, position.y, 1000)
 		});
 		
 	});
