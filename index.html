@@ -55,13 +55,14 @@
 	const camera = new Cesium.Camera(viewer.scene);
 	
 	
-	var arrow = document.getElementById('arrow');
+	// var arrow = document.getElementById('arrow');
 	var globe = document.getElementById('globe');
+	var cesiumContainer = document.getElementById('cesiumContainer');
 
 	var globeRect = globe.getBoundingClientRect();
-	var arrowRect = arrow.getBoundingClientRect();
-	var xRatio = globeRect.width / arrowRect.width;
-	var yRatio = globeRect.height / arrowRect.height;
+	var cesiumContainerRect = cesiumContainer.getBoundingClientRect();
+	var xRatio = globeRect.width / cesiumContainerRect.width;
+	var yRatio = globeRect.height / cesiumContainerRect.height;
 	
 	viewer.scene.globe.tileLoadProgressEvent.addEventListener(function(tilesLoading) {
 		if (tilesLoading === 0) {
@@ -88,7 +89,7 @@
 
 	var screenSpaceEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 	screenSpaceEventHandler.setInputAction(function(event){
-		setArrowPos(event.position.x, event.position.y);
+		setArrowPos((event.position.x - cesiumContainerRect.left) * xRatio, (event.position.y - cesiumContainerRect.top) * yRatio);
 		
 	}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 	
@@ -96,14 +97,10 @@
 		var x = event.clientX;
 		var y = event.clientY;
 		
-		var cameraPosition = viewer.camera.position;
-		var cartographicPosition = Cesium.Cartographic.fromCartesian(cameraPosition);
-		var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, cameraPosition);
-		
 		setArrowPos(x - globeRect.left, y - globeRect.top);
 		
 		camera.flyTo({
-			desttination: from2DtoCartographicPosition(x / xRatio, y / yRatio)
+			desttination: from2DtoCartographicPosition((x - globeRect.left) / xRatio, (y - globeRect.right) / yRatio)
 		});
 		
 	});
