@@ -23,6 +23,18 @@
 		arrow.style.top = y + 'px';
 	}
 
+	function setArrowPosFromCartographicPosition(cartographic)
+	{
+			// Get the latitude, longitude, and height
+			var longitude = Cesium.Math.toDegrees(cartographic.longitude);
+			var latitude = Cesium.Math.toDegrees(cartographic.latitude);
+
+			var arrowPosX = ((180 + longitude) / 360) * globeRect.width;
+			var arrowPosY = ((90 - latitude) / 180) * globeRect.height; 
+
+			setArrowPos(arrowPosX, arrowPosY);
+	}
+
 	function from2DtoCartographicPosition (position)
 	{
 		// Get the ray from the screen position
@@ -58,37 +70,16 @@
 	viewer.scene.globe.tileLoadProgressEvent.addEventListener(function(tilesLoading) {
 		if (tilesLoading === 0) {
 			// get current camera and calc position and set the initial arrow position
-
-			var position = camera.positionCartographic;
-			var longitude = Cesium.Math.toDegrees(position.longitude);
-			var latitude = Cesium.Math.toDegrees(position.latitude);
-			var height = position.height;
-
-			var cartesianPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
-
-			// Convert world coordinates to screen coordinates
-			var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, cartesianPosition); // not working for some reason
-			if(screenPosition)
-			{
-				setArrowPos(screenPosition.x / xRatio, screenPosition.y / yRatio);
-			}
+			var position = {'x': cesiumContainerRect.width / 2, 'y': cesiumContainerRect.height / 2};
+			var cartographic = from2DtoCartographicPosition(position);
+			setArrowPosFromCartographicPosition(cartographic);
 		}
 	});
 
 	var screenSpaceEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 	screenSpaceEventHandler.setInputAction(function(event){
 		var cartographic = from2DtoCartographicPosition(event.position);
-
-		// Get the latitude, longitude, and height
-		var longitude = Cesium.Math.toDegrees(cartographic.longitude);
-		var latitude = Cesium.Math.toDegrees(cartographic.latitude);
-		var height = cartographic.height;
-
-		var arrowPosX = ((180 + longitude) / 360) * globeRect.width;
-		var arrowPosY = ((90 - latitude) / 180) * globeRect.height; 
-
-		setArrowPos( arrowPosX, arrowPosY);
-		
+		setArrowPosFromCartographicPosition(cartographic);		
 	}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 	
 	globe.addEventListener('click', function(event){		  
