@@ -1,0 +1,27 @@
+#cesiumContainer {
+    width: 600px;
+    height: 600px;
+	display: inline-block;
+}
+
+.container {
+    position: relative;
+	float: right;
+	top: 0;
+	left: 0;
+}
+
+#globe {	
+	position: relative;
+	top: 0;
+	left: 0;
+}
+
+#arrow {	
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	top: 0;
+	left: 0;
+}
+
