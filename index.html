@@ -23,26 +23,17 @@
 		arrow.style.top = y + 'px';
 	}
 
-	function from2DtoCartographicPosition (x, y)
+	function from2DtoCartographicPosition (position)
 	{
-		const screenPosition = new Cesium.Cartesian2(x, y);
-
-		// Pick the position on the ellipsoid corresponding to the screen position
-		const ellipsoidPosition = viewer.camera.pickEllipsoid(screenPosition, viewer.scene.globe.ellipsoid);
-
-		if (ellipsoidPosition) {
-			// Convert the Cartesian3 ellipsoid position to geographic (latitude, longitude, altitude)
-			const cartographicPosition = Cesium.Cartographic.fromCartesian(ellipsoidPosition);
-
-			const latitude = Cesium.Math.toDegrees(cartographicPosition.latitude);
-			const longitude = Cesium.Math.toDegrees(cartographicPosition.longitude);
-			const altitude = cartographicPosition.height;
-
-			console.log(`Latitude: ${latitude}, Longitude: ${longitude}, Altitude: ${altitude}`);
-
-			return {'latitude' : latitude, 'longitude' : longitude, 'altitude' : altitude};
-		} else {
-			console.log("The screen position does not map to a point on the ellipsoid.");
+		// Get the ray from the screen position
+		var ray = viewer.camera.getPickRay(position);
+    
+		// Find the intersection of the ray with the globe
+		var intersection = viewer.scene.globe.pick(ray, viewer.scene);
+		if (intersection) {
+			var cartographic = Cesium.Ellipsoid.WGS84.cartesianToCartographic(intersection);
+					
+			return cartographic;
 		}
 
 		return NaN;
@@ -79,9 +70,6 @@
 			var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(viewer.scene, cartesianPosition); // not working for some reason
 			if(screenPosition)
 			{
-				console.log('Screen X:', screenPosition.x);
-				console.log('Screen Y:', screenPosition.y);
-
 				setArrowPos(screenPosition.x / xRatio, screenPosition.y / yRatio);
 			}
 		}
@@ -89,34 +77,37 @@
 
 	var screenSpaceEventHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 	screenSpaceEventHandler.setInputAction(function(event){
-		// Get the ray from the screen position
-		var ray = viewer.camera.getPickRay(event.position);
-    
-		// Find the intersection of the ray with the globe
-		var intersection = viewer.scene.globe.pick(ray, viewer.scene);
-		if (intersection) {
-			var cartographic = Cesium.Ellipsoid.WGS84.cartesianToCartographic(intersection);
-			
-			// Get the latitude, longitude, and height
-			var longitude = Cesium.Math.toDegrees(cartographic.longitude);
-			var latitude = Cesium.Math.toDegrees(cartographic.latitude);
-			var height = cartographic.height;
-			
-			setArrowPos( (( 180 + longitude) / 360) * globeRect.width, ((90 - latitude) / 180) * globeRect.height);
+		var cartographic = from2DtoCartographicPosition(event.position);
 
-			console.log("Intersection at: ", longitude, latitude, height);
-		}
+		// Get the latitude, longitude, and height
+		var longitude = Cesium.Math.toDegrees(cartographic.longitude);
+		var latitude = Cesium.Math.toDegrees(cartographic.latitude);
+		var height = cartographic.height;
+
+		var arrowPosX = ((180 + longitude) / 360) * globeRect.width;
+		var arrowPosY = ((90 - latitude) / 180) * globeRect.height; 
+
+		setArrowPos( arrowPosX, arrowPosY);
 		
 	}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 	
 	globe.addEventListener('click', function(event){		  
-		var x = event.clientX;
-		var y = event.clientY;
+		var globePosX = event.clientX;
+		var globePosY = event.clientY;
 		
-		setArrowPos(x - globeRect.left, y - globeRect.top);
+		setArrowPos(globePosX - globeRect.left, globePosY - globeRect.top);
+
+		var position = {};
+		position.x = ((360 * globePosX) / globeRect.width) - 180;
+		position.y = 90 - ((180 * globePosY) / globeRect.height);
 		
+		var cartographic = from2DtoCartographicPosition(position);
+		var latitude = Cesium.Math.toDegrees(cartographic.latitude);
+		var longitude = Cesium.Math.toDegrees(cartographic.longitude);
+		var height = cartographic.height;
+
 		camera.flyTo({
-			desttination: from2DtoCartographicPosition((x - globeRect.left) / xRatio, (y - globeRect.right) / yRatio)
+			destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
 		});
 		
 	});
